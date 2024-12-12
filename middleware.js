@@ -10,7 +10,7 @@ export async function middleware(req) {
 
   try {
     // Construct the absolute URL for the local API route
-    const absoluteUrl = `${req.nextUrl.origin}/api/check-db`;
+    const absoluteUrl = `/api/check-db`;
 
     // Fetch database connection status
     const response = await fetch(absoluteUrl);
