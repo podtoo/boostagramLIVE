@@ -1,7 +1,7 @@
 # Boostagram.LIVE
 Boostagram, is an open-source tool that will allow your fans to send boosts to your show. Our goal is to create boostagram live to be a standalone app, that can accept voice &amp; video messages as well as text messages.
 
-Demo/Development Site: https://Boostagram.live (coming soon)
+Demo/Development Site: https://Boostagram.live
 
 # Powered by L402 & SecureRSS
 Boostagram.live software utilises the L402.org idea, &amp; SecureRSS by PodToo to allow users to boost a podcast.
