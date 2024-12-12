@@ -68,3 +68,32 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
 # ADMIN AREA
 ENCRYPTION_KEY=your-32-byte-hex-key  // IF YOU DON'T MANUALLY CREATE THIS DURING SETUP IT WILL CREATE THIS AND YOU WILL NEED TO ADD IT MANUALLY TO YOUR .ENV FILE OTHERWISE YOUR BOOSTAGRAM LIVE SERVER WON'T WORK.
 ```
+
+
+# NGNIX Setup
+We use Docker and Dockerfile, you will need to work out how to add your domain to your server, but the way we do it is if the OS has NGINX setup installed with certbot then we create in site-available a new conf called boostagram and then add this to it, note you may want to add more to redirect if user types in www. or goes to http over https this is just a simple example.
+
+```
+server {
+    listen 443 ssl;
+    server_name INSERT YOUR DOMAIN HERE;
+
+
+    location / {
+
+      # Common headers for all proxied requests
+      proxy_pass http://0.0.0.0:9000;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+
+      proxy_connect_timeout 60s; // NOTE THESE CAN BE ADJUSTED
+      proxy_send_timeout 300; // NOTE THESE CAN BE ADJUSTED
+      proxy_read_timeout 300s; // NOTE THESE CAN BE ADJUSTED
+    }
+
+    ssl_certificate /etc/letsencrypt/live/(YOUR DOMAIN)/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/(YOUR DOMAIN)/privkey.pem;
+}
+```
