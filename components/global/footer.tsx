@@ -41,7 +41,7 @@ const Footer = () => {
     >
       {versionInfo ? (
         <Typography variant="body2" color="text.secondary">
-          {versionInfo.app_name} - v{versionInfo.version} (Released on {versionInfo.releaseDate})
+          {versionInfo.app_name} - {versionInfo.version} (Released on {versionInfo.releaseDate})
         </Typography>
       ) : (
         <Typography variant="body2" color="text.secondary">
