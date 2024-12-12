@@ -3,7 +3,8 @@ import { getWalletBalance } from "../../lib/walletFunctions/Balance";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
-import { Container, Grid2 } from "@mui/material";
+import { Container, Grid } from "@mui/material";
+import { useEffect, useState } from "react";
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { req } = context;
@@ -45,61 +46,64 @@ interface AdminDashboardProps {
 }
 
 const AdminDashboard = ({ walletInfo }: AdminDashboardProps) => {
+  const [currentHost, setCurrentHost] = useState("");
+
+  useEffect(() => {
+    // Get the current host (domain or IP with port) from the browser window
+    setCurrentHost(window.location.host);
+  }, []);
+
   return (
-    <Container maxWidth={'lg'} sx={{pt:'1em'}}>
+    <Container maxWidth="lg" sx={{ pt: "1em" }}>
       <h1>Admin Dashboard</h1>
       <p>Welcome to the Boostagram admin dashboard.</p>
-      <Grid2 container spacing={2}>
-        <Grid2 size={8}>
-        <Card>
-          <CardContent sx={{borderRadius: 100}}>
-          <Typography variant="h6" component="div">
-             Add this to your V4V block
-            </Typography>
+      <Grid container spacing={2}>
+        <Grid item xs={8}>
+          <Card>
+            <CardContent sx={{ borderRadius: 100 }}>
+              <Typography variant="h6" component="div">
+                Add this to your V4V block
+              </Typography>
 
-            <Typography variant="body2" component="div" sx={{overflow:'auto', fontSize:'10px'}}>
-            <pre>
-                <code>
-{`<podcast:value type="lightning" method="keysend" suggested="0.00000005000">
-  <podcast:valueRecipient name="My Podcast Name" type="lnaddress" address="boostagram@localhost:3000" split="100"/>
+              <Typography variant="body2" component="div" sx={{ overflow: "auto", fontSize: "10px" }}>
+                <pre>
+                  <code>
+                    {`<podcast:value type="lightning" method="keysend" suggested="0.00000005000">
+  <podcast:valueRecipient name="My Podcast Name" type="lnaddress" address="boostagram@${currentHost}" split="100"/>
 </podcast:value>`}
-                </code>
-              </pre>
-            </Typography>
-          </CardContent>
-        </Card>
-        </Grid2>
-        <Grid2 size={4}>
-        <Card sx={{mb:'1em'}}>
-          <CardContent sx={{borderRadius: 100}}>
-            <Typography variant="h6" component="div">
-              Your balance: {walletInfo.totalBalance} sats
-            </Typography>
-          </CardContent>
-        </Card>
+                  </code>
+                </pre>
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
 
+        <Grid item xs={4}>
+          <Card sx={{ mb: "1em" }}>
+            <CardContent sx={{ borderRadius: 100 }}>
+              <Typography variant="h6" component="div">
+                Your balance: {walletInfo.totalBalance} sats
+              </Typography>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardContent sx={{borderRadius: 100}}>
-            <Typography variant="h6" component="div">
-             Boostagram Live App News
-            </Typography>
+          <Card>
+            <CardContent sx={{ borderRadius: 100 }}>
+              <Typography variant="h6" component="div">
+                Boostagram Live App News
+              </Typography>
 
-            <Typography variant="body1" component="div" sx={{overflow:'auto'}}>
-            <ul>
-            <li>Version 0.0.1</li>
-            <ol>Currently in development</ol>
-            </ul>
-            </Typography>
-          </CardContent>
-        </Card>
-        </Grid2>
-        
-      </Grid2>
+              <Typography variant="body1" component="div" sx={{ overflow: "auto" }}>
+                <ul>
+                  <li>Version 0.0.1</li>
+                  <ol>Currently in development</ol>
+                </ul>
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
-
-      
-      {/* You can also display or handle the transactions as needed */}
     </Container>
   );
 };
