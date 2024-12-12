@@ -1,0 +1,27 @@
+name: Update Version
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Create version.json
+        run: |
+          echo '{
+            "app_name": "Boostagram Live",
+            "version": "${{ github.event.release.tag_name }}",
+            "releaseDate": "${{ github.event.release.published_at }}"
+          }' > lib/boostagram/version.json
+
+      - name: Commit and Push version.json
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Update version.json for ${{ github.event.release.tag_name }}"
+          branch: main

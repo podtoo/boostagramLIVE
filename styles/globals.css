@@ -1,0 +1,33 @@
+/* /styles/globals.css */
+
+/* Reset body margin and padding */
+body {
+    background-color: #f7931a;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box; /* Ensures consistent sizing */
+    font-family: 'Roboto', sans-serif; /* Optional, set your default font */
+  }
+  
+  /* Apply box-sizing globally to all elements */
+  *, *::before, *::after {
+    box-sizing: inherit;
+  }
+  
+  /* Additional global styles (if needed) */
+  html, body {
+    width: 100%;
+    height: 100%;
+  }
+  
+  h1 {
+    margin:0;
+  }
+
+  h2 {
+    margin:0;
+  }
+
+  h6 {
+    font-weight: bold;
+  }
