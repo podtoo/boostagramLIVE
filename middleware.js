@@ -43,5 +43,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ["/((?!_next|static|favicon.ico).*)"], // Match all pages except static files and API routes
+  matcher: ["/((?!_next|static|favicon.ico|api/check-db).*)"], // Exclude the check-db API route
 };
