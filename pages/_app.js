@@ -2,11 +2,12 @@ import { useEffect } from "react";
 import { useRouter } from "next/router";
 import '../styles/globals.css';
 import Header from '../components/global/header';
+import Footer from '../components/global/fotter';
 import IdleLogout from "../components/system/idleLogout";
 
 
 
-function MyApp({ Component, pageProps }) {
+function Boostagram({ Component, pageProps }) {
   const router = useRouter();
 
   return (
@@ -16,8 +17,9 @@ function MyApp({ Component, pageProps }) {
         <Component {...pageProps} />
         <IdleLogout />
       </main>
+      <Footer />
     </>
   );
 }
 
-export default MyApp;
+export default Boostagram;

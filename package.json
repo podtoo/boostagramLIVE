@@ -1,6 +1,6 @@
 {
   "name": "boostagramlive",
-  "version": "1.0.0",
+  "version": "0.0.2",
   "description": "Boostagram, is an open-source tool that will allow your fans to send boosts to your show. Our goal is to create boostagram live to be a standalone app, that can accept voice &amp; video messages as well as text messages.",
   "main": "index.js",
   "scripts": {
