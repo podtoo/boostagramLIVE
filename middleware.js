@@ -18,7 +18,7 @@ export async function middleware(req) {
     // Construct the absolute URL using the Host header
     const host = req.headers.get("host");
     const protocol = req.headers.get("x-forwarded-proto") || "http";
-    const absoluteUrl = `${protocol}://${host}/api/check-db`;
+    const absoluteUrl = `${protocol}://${host}/api/system/check-db`;
 
     console.log(absoluteUrl);
 

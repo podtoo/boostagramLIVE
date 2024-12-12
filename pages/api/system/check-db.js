@@ -1,4 +1,4 @@
-import { createDatabase } from "../../lib/factory";
+import { createDatabase } from "../../../lib/factory";
 
 export default async function handler(req, res) {
   const db = createDatabase();

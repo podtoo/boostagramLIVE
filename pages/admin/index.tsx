@@ -5,6 +5,7 @@ import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import { Container, Grid } from "@mui/material";
 import { useEffect, useState } from "react";
+import accessControl from "@/hoc/accessControl";
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { req } = context;
@@ -108,4 +109,4 @@ const AdminDashboard = ({ walletInfo }: AdminDashboardProps) => {
   );
 };
 
-export default AdminDashboard;
+export default accessControl(AdminDashboard);

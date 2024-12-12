@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import CommentCard from "@/components/system/commentCard";
 import { getWalletBalance } from "../../lib/walletFunctions/Balance";
+import accessControl from "@/hoc/accessControl";
 
 // Sound effect URLs from the public folder
 const boostSounds = {
@@ -231,4 +232,5 @@ useEffect(() => {
   );
 };
 
-export default LiveDashboard;
+
+export default accessControl(LiveDashboard);
