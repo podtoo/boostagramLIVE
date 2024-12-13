@@ -61,8 +61,8 @@ export default async function handler(
         tag: "payRequest",
         commentAllowed: 10000,
         callback: callbackUrl,
-        //minSendable: 100000,
-        //maxSendable: 10000000000,
+        minSendable: 1000,
+        maxSendable: 10000000000,
         metadata: JSON.stringify([
           ["text/identifier", `${walletname}@${domain}`],
           ["text/plain", `Sats for user ${walletname}`]
