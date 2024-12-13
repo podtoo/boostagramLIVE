@@ -20,7 +20,8 @@ export default async function handler(
   }
 
   try {
-    const protocol = (req.headers.get("x-forwarded-proto") as string) || "http";
+
+    const protocol = req.headers["x-forwarded-proto"] || "http";
     const domain = req.headers.host//getDomain();
     const callbackUrl = `${protocol}://${req.headers.host}/.well-known/lnurlp/${walletname}/callback`;
 
