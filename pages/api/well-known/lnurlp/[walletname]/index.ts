@@ -67,6 +67,17 @@ export default async function handler(
           ["text/identifier", `${walletname}@${domain}`],
           ["text/plain", `Sats for user ${walletname}`]
         ]),
+        payerData: {
+            name: {
+              mandatory: true
+            },
+            email: {
+              mandatory: false
+            },
+            pubkey: {
+              mandatory: false
+            }
+        },
         boostagram:{
           appName:"optional",
           appIcon:"optional",

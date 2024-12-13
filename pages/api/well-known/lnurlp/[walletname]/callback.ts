@@ -27,6 +27,8 @@ export default async function handler(
     episiodeGUID = null,
   } = req.query;
 
+  console.log(JSON.stringify(req.query));
+
   // Convert amount to number and handle validation
   const parsedAmount = amount ? Number(amount) : null;
 
