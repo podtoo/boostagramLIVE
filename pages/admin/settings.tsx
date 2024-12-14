@@ -1,5 +1,3 @@
-// pages/settings.tsx
-
 import { useState, useEffect } from "react";
 import {
   Box,
@@ -14,6 +12,7 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import accessControl from "@/hoc/accessControl";
 
 interface Podcast {
   title: string;
@@ -23,7 +22,7 @@ interface Podcast {
   rssUrl: string;
 }
 
-export default function Settings() {
+function Settings() {
   const [currentTab, setCurrentTab] = useState(0);
   const [subwallets, setSubwallets] = useState<{ name: string; podcastGuid: string; submitted: boolean }[]>([]);
   const [walletLink, setWalletLink] = useState("");
@@ -72,7 +71,7 @@ export default function Settings() {
       return;
     }
 
-    
+
     try {
       const response = await fetch("/api/system/walletmanagment/updatesubwallet", {
         method: "POST",
@@ -259,3 +258,6 @@ export default function Settings() {
     </Box>
   );
 }
+
+
+export default accessControl(Settings);
