@@ -25,20 +25,26 @@ interface Podcast {
 
 export default function Settings() {
   const [currentTab, setCurrentTab] = useState(0);
-  const [subwallets, setSubwallets] = useState<string[]>([]);
+  const [subwallets, setSubwallets] = useState<{ name: string; podcastGuid: string; submitted: boolean }[]>([]);
   const [walletLink, setWalletLink] = useState("");
   const [podcasts, setPodcasts] = useState<Podcast[]>([]);
   const [newRssUrl, setNewRssUrl] = useState("");
 
   useEffect(() => {
     // Fetch existing podcasts and wallets when component mounts
-    fetch("/api/settings/podcasts")
+    fetch("/api/system/podcast")
       .then((res) => res.json())
       .then(setPodcasts);
 
-    fetch("/api/settings/subwallets")
+    fetch("/api/system/walletmanagment/getsubwallets")
       .then((res) => res.json())
-      .then(setSubwallets);
+      .then((data) => {
+        const updatedSubwallets = data.map((wallet: { name: string; podcastGuid: string }) => ({
+          ...wallet,
+          submitted: true, // Mark all loaded wallets as submitted
+        }));
+        setSubwallets(updatedSubwallets);
+      });
   }, []);
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
@@ -46,21 +52,73 @@ export default function Settings() {
   };
 
   const handleAddSubwallet = () => {
-    const newWallet = `Subwallet ${subwallets.length + 1}`;
-    setSubwallets([...subwallets, newWallet]);
+    setSubwallets([...subwallets, { name: "", podcastGuid: "", submitted: false }]);
   };
 
+  const handleSubwalletNameChange = (index: number, value: string) => {
+    const updatedSubwallets = [...subwallets];
+    updatedSubwallets[index].name = value;
+    setSubwallets(updatedSubwallets);
+  };
+
+  const handleLinkToPodcast = async (index: number, podcastGuid: string) => {
+    const updatedSubwallets = [...subwallets];
+    updatedSubwallets[index].podcastGuid = podcastGuid;
+  
+    // Send the update to the server
+    const subwallet = updatedSubwallets[index];
+    if (!subwallet.name || subwallet.name.trim() === "") {
+      alert("Please enter a subwallet name before linking to a podcast.");
+      return;
+    }
+
+    
+    try {
+      const response = await fetch("/api/system/walletmanagment/updatesubwallet", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: subwallet.name,
+          podcastGuid: subwallet.podcastGuid,
+          domain: window.location.hostname,
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to update subwallet");
+      }
+  
+      // Mark as submitted
+      updatedSubwallets[index].submitted = true;
+      setSubwallets(updatedSubwallets);
+      console.log("Subwallet updated successfully");
+    } catch (error) {
+      console.error("Error updating subwallet:", error);
+    }
+  };
+  
+  
+
+  const handleDeleteSubwallet = (index: number) => {
+    const updatedSubwallets = subwallets.filter((_, i) => i !== index);
+    setSubwallets(updatedSubwallets);
+  };
+
+  
   const handleAddPodcast = async () => {
     if (!newRssUrl) return;
 
     try {
-      const res = await fetch("/api/fetchPodcast", {
+      const res = await fetch("/api/system/podcast/savePodcast", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rssUrl: newRssUrl }),
       });
 
       const podcast = await res.json();
+      console.log(JSON.stringify(podcast));
       setPodcasts([...podcasts, { ...podcast, rssUrl: newRssUrl }]);
       setNewRssUrl("");
     } catch (error) {
@@ -77,8 +135,8 @@ export default function Settings() {
     <Box sx={{ width: "100%", padding: 2 }}>
       <Tabs value={currentTab} onChange={handleTabChange} centered>
         <Tab label="Admin" />
+        <Tab label="My Podcasts" />
         <Tab label="Wallets" />
-        <Tab label="Podcasts" />
       </Tabs>
 
       {/* Admin Tab */}
@@ -92,32 +150,73 @@ export default function Settings() {
       )}
 
       {/* Wallets Tab */}
-      {currentTab === 1 && (
+      {currentTab === 2 && (
         <Card sx={{ marginTop: 2 }}>
           <CardContent>
             <Typography variant="h6">Wallets</Typography>
-            <Button variant="contained" onClick={handleAddSubwallet}>
+
+            {/* Add Subwallet Button */}
+            <Button variant="contained" onClick={handleAddSubwallet} sx={{ mb: 2 }}>
               Add Subwallet
             </Button>
+
+            {/* Subwallet Input and Dropdown for Linking Podcast */}
             <Box mt={2}>
               {subwallets.map((wallet, index) => (
-                <Typography key={index}>{wallet}</Typography>
+                <Box key={index} display="flex" alignItems="center" gap={2} mb={2}>
+                  <TextField
+                    label="Subwallet Name"
+                    value={wallet.name}
+                    onChange={(e) => handleSubwalletNameChange(index, e.target.value)}
+                    fullWidth
+                    disabled={wallet.submitted} // Disable if the wallet has been submitted
+                    InputProps={{
+                      endAdornment: (
+                        <Typography variant="body2" sx={{ color: "grey.600", ml: 1 }}>
+                          @{window.location.hostname}
+                        </Typography>
+                      ),
+                    }}
+                  />
+
+                  <TextField
+                    select
+                    label="Link to Podcast"
+                    value={wallet.podcastGuid}
+                    onChange={(e) => handleLinkToPodcast(index, e.target.value)}
+                    SelectProps={{ native: true }}
+                    fullWidth
+                  >
+                    <option value="">Link to Podcast</option>
+                    {podcasts.map((podcast) => {
+                      // Check if the podcast is already selected by another subwallet
+                      const isSelected = subwallets.some(
+                        (sw, i) => sw.podcastGuid === podcast.guid && i !== index
+                      );
+
+                      return (
+                        <option key={podcast.guid} value={podcast.guid} disabled={isSelected}>
+                          {podcast.title}
+                        </option>
+                      );
+                    })}
+                  </TextField>
+
+
+                  <IconButton color="error" onClick={() => handleDeleteSubwallet(index)}>
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
               ))}
-            </Box>
-            <Box mt={2}>
-              <TextField
-                label="Link Wallet to Podcast"
-                value={walletLink}
-                onChange={(e) => setWalletLink(e.target.value)}
-                fullWidth
-              />
             </Box>
           </CardContent>
         </Card>
       )}
 
+
+
       {/* Podcasts Tab */}
-      {currentTab === 2 && (
+      {currentTab === 1 && (
         <Card sx={{ marginTop: 2 }}>
           <CardContent>
             <Typography variant="h6">Podcasts</Typography>
