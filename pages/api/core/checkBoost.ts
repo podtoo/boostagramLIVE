@@ -20,8 +20,7 @@ export default async function handler(
     // Fetch wallet connection settings
     const getWallet = await db.get("settings", [], ["nostrConnectAddress"]);
     const decryptWallet = await decrypt(getWallet[0]["nostrConnectAddress"]);
-    console.log("Decrypted Wallet:", decryptWallet);
-
+    
     if (!decryptWallet) {
       return res.status(404).json({ error: "Wallet connection not found" });
     }
@@ -83,7 +82,6 @@ export default async function handler(
     console.error("Error handling request:", error);
     return res.status(500).json({ error: "Internal server error" });
   } finally {
-    // Ensure the database connection is closed
-    await db.close();
+   
   }
 }

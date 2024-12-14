@@ -85,7 +85,5 @@ export default async function handler(
     console.error("Error handling request:", error);
     return res.status(500).json({ error: "Internal server error" });
   } finally {
-    // Ensure the database connection is closed
-    await db.close();
   }
 }

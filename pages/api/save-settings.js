@@ -50,8 +50,7 @@ export default async function handler(req, res) {
     };
 
     const result = await db.insert("settings", data);
-    await db.close();
-
+    
     // Respond with success message and the encryption key (if newly generated)
     res.status(200).json({
       message: "Settings saved successfully",
