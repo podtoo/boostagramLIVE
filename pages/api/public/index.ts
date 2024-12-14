@@ -23,7 +23,6 @@ export default async function handler(
     // Fetch wallet connection settings
     const getWallet = await db.get("settings", [], ["nostrConnectAddress"]);
     const decryptWallet = await decrypt(getWallet[0]["nostrConnectAddress"]);
-    console.log("Decrypted Wallet:", decryptWallet);
 
     if (!decryptWallet) {
       return res.status(404).json({ error: "Wallet connection not found" });
