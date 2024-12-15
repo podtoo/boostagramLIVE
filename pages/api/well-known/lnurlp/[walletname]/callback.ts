@@ -22,6 +22,7 @@ export default async function handler(
     appName = null,
     appIcon = null,
     username = null,
+    from = null,
     userProfileLink = null,
     userProfileImage = null,
     episiodeGUID = null,
@@ -51,10 +52,14 @@ export default async function handler(
     // Initialize the NWC client with the connectionSecret
     const nwcClient = new nwc.NWCClient({ nostrWalletConnectUrl: decryptWallet });
 
+    // Use 'username' or fallback to 'from'
+    const effectiveUsername = username || from || null;
+
+
     const commentQuery = {
       appName: appName || null,
       appIcon: appIcon || null,
-      username: username || null,
+      username: effectiveUsername,
       userProfileLink: userProfileLink || null,
       userProfileImage: userProfileImage || null,
       amount: parsedAmount,
@@ -69,7 +74,7 @@ export default async function handler(
     const metadataKey = {
       appName: appName || null,
       appIcon: appIcon || null,
-      username: username || null,
+      username: effectiveUsername,
       userProfileLink: userProfileLink || null,
       boostagramID: createComment.insertedId,
       walletName:walletname

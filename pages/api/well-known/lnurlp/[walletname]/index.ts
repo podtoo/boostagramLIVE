@@ -81,7 +81,7 @@ export default async function handler(
         boostagram:{
           appName:"optional",
           appIcon:"optional",
-          username:"optional",
+          from:"optional",
           userProfileLink:"optional",
           userProfileImage:"optional",
           comment:"required",

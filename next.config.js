@@ -25,6 +25,10 @@ module.exports = {
         {
           source: '/.well-known/:path*',
           destination: '/api/well-known/:path*',
+        },
+        {
+          source: '/comments/:path*',
+          destination: '/api/core/comments/:path*',
         }
       ];
     },

@@ -1,5 +1,3 @@
-// pages/api/checkEpisodes.ts
-
 import { NextApiRequest, NextApiResponse } from "next";
 import Parser from "rss-parser";
 import { createDatabase } from "@/lib/factory";
@@ -69,8 +67,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             duration,
             pubDate,
           };
-
-          console.log("Found episode:", episode);
 
           // Store the episode data in the database if it doesn't already exist
           const existingEpisode = await db.get("episodes", [["guid", "==", `${guid}`]]);
