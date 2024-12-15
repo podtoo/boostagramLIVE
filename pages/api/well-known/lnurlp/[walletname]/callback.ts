@@ -25,7 +25,7 @@ export default async function handler(
     from = null,
     userProfileLink = null,
     userProfileImage = null,
-    episiodeGUID = null,
+    episodeGUID = null,
   } = req.query;
 
   console.log(JSON.stringify(req.query));
@@ -64,7 +64,7 @@ export default async function handler(
       userProfileImage: userProfileImage || null,
       amount: parsedAmount,
       comment: description || null,
-      episiodeGUID: episiodeGUID || null,
+      episiodeGUID: episodeGUID || null,
       type: "lightning",
       walletName:walletname
     };
