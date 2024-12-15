@@ -22,11 +22,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let podcastGUID: string | undefined;
     let episodeGUID: string | undefined;
 
-    if (!slug || slug.length === 0) {
+    if (!slug || !Array.isArray(slug) || slug.length === 0) {
       return res.status(400).json({ error: "Invalid request. Please provide valid parameters." });
     }
 
-    // Handle cases with one parameter (ambiguity between walletname, episodeGUID, and podcastGUID)
+    // Handle cases with one parameter
     if (slug.length === 1) {
       const param = slug[0] as string;
 
@@ -46,53 +46,76 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    // Handle cases with two or three parameters
+    // Handle cases with two parameters
     if (slug.length === 2) {
       [walletname, podcastGUID] = slug as string[];
-    } else if (slug.length === 3) {
+    }
+
+    // Handle cases with three parameters
+    if (slug.length === 3) {
       [walletname, podcastGUID, episodeGUID] = slug as string[];
     }
 
     // Case 1: walletname + podcastGUID + episodeGUID
     if (walletname && podcastGUID && episodeGUID) {
-      queryConditions.push(["walletName", "==", walletname]);
-      queryConditions.push(["episiodeGUID", "==", episodeGUID]);
+      const walletExists = await db.get("boosts", [["walletName", "==", walletname]], []);
+      const episodeExists = await db.get("episodes", [["guid", "==", episodeGUID]], []);
+      if (walletExists.length > 0 && episodeExists.length > 0) {
+        queryConditions.push(["walletName", "==", walletname]);
+        queryConditions.push(["episiodeGUID", "==", episodeGUID]);
+      }
     }
     // Case 2: walletname + podcastGUID
     else if (walletname && podcastGUID) {
-      queryConditions.push(["walletName", "==", walletname]);
+      const walletExists = await db.get("boosts", [["walletName", "==", walletname]], []);
       const podcastResults = await db.get("podcasts", [["guid", "==", podcastGUID]], []);
-      if (podcastResults.length === 0) {
-        return res.status(404).json({ error: "Podcast not found" });
+      if (walletExists.length > 0 && podcastResults.length > 0) {
+        const podcastId = getId(podcastResults[0]);
+        const episodeResults = await db.get("episodes", [["podcastId", "==", podcastId]], []);
+        const episodeGUIDs = episodeResults.map((ep: any) => ep.guid);
+        queryConditions.push(["walletName", "==", walletname]);
+        queryConditions.push(["episiodeGUID", "in", episodeGUIDs]);
       }
-      const podcastId = getId(podcastResults[0]);
-      const episodeResults = await db.get("episodes", [["podcastId", "==", podcastId]], []);
-      const episodeGUIDs = episodeResults.map((ep: any) => ep.guid);
-      queryConditions.push(["episiodeGUID", "in", episodeGUIDs]);
     }
-    // Case 3: podcastGUID only
+    // Case 3: walletname + episodeGUID
+    else if (walletname && episodeGUID) {
+      const walletExists = await db.get("boosts", [["walletName", "==", walletname]], []);
+      const episodeExists = await db.get("episodes", [["guid", "==", episodeGUID]], []);
+      if (walletExists.length > 0 && episodeExists.length > 0) {
+        queryConditions.push(["walletName", "==", walletname]);
+        queryConditions.push(["episiodeGUID", "==", episodeGUID]);
+      }
+    }
+    // Case 4: podcastGUID + episodeGUID
+    else if (podcastGUID && episodeGUID) {
+      const episodeExists = await db.get("episodes", [["guid", "==", episodeGUID]], []);
+      if (episodeExists.length > 0) {
+        queryConditions.push(["episiodeGUID", "==", episodeGUID]);
+      }
+    }
+    // Case 5: walletname only
+    else if (walletname) {
+      const walletExists = await db.get("boosts", [["walletName", "==", walletname]], []);
+      if (walletExists.length > 0) {
+        queryConditions.push(["walletName", "==", walletname]);
+      }
+    }
+    // Case 6: podcastGUID only
     else if (podcastGUID) {
       const podcastResults = await db.get("podcasts", [["guid", "==", podcastGUID]], []);
-      if (podcastResults.length === 0) {
-        return res.status(404).json({ error: "Podcast not found" });
+      if (podcastResults.length > 0) {
+        const podcastId = getId(podcastResults[0]);
+        const episodeResults = await db.get("episodes", [["podcastId", "==", podcastId]], []);
+        const episodeGUIDs = episodeResults.map((ep: any) => ep.guid);
+        queryConditions.push(["episiodeGUID", "in", episodeGUIDs]);
       }
-      const podcastId = getId(podcastResults[0]);
-      const episodeResults = await db.get("episodes", [["podcastId", "==", podcastId]], []);
-      const episodeGUIDs = episodeResults.map((ep: any) => ep.guid);
-      queryConditions.push(["episiodeGUID", "in", episodeGUIDs]);
     }
-    // Case 4: episodeGUID only
+    // Case 7: episodeGUID only
     else if (episodeGUID) {
-      queryConditions.push(["episiodeGUID", "==", episodeGUID]);
-    }
-    // Case 5: walletname + episodeGUID
-    else if (walletname && episodeGUID) {
-      queryConditions.push(["walletName", "==", walletname]);
-      queryConditions.push(["episiodeGUID", "==", episodeGUID]);
-    }
-    // Case 6: walletname only
-    else if (walletname) {
-      queryConditions.push(["walletName", "==", walletname]);
+      const episodeExists = await db.get("episodes", [["guid", "==", episodeGUID]], []);
+      if (episodeExists.length > 0) {
+        queryConditions.push(["episiodeGUID", "==", episodeGUID]);
+      }
     }
 
     // Fetch the boosts based on the query conditions
@@ -117,6 +140,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (error: any) {
     console.error("Error fetching boosts:", error.message || error);
     res.status(500).json({ error: "Internal server error." });
-  } finally {
   }
 }
