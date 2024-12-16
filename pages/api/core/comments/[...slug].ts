@@ -12,24 +12,32 @@ const formatDate = (timestamp: number): string => {
 // Helper function to convert a JSON object to XML
 const jsonToXml = (obj: any): string => {
   let xml = "";
-  
+
   for (let key in obj) {
     if (obj.hasOwnProperty(key)) {
       const value = obj[key];
-      if (Array.isArray(value)) {
+      
+      // Check if the key is 'source' and format it as <source href="..."> if it exists
+      if (key === "source" && value) {
+        xml += `<source href="${value.link}">${value.name}</source>`;
+      } else if (Array.isArray(value)) {
+        // Handle arrays by recursively converting each item to XML
         value.forEach((item: any) => {
           xml += `<${key}>${jsonToXml(item)}</${key}>`;
         });
       } else if (typeof value === "object") {
+        // If the value is an object, recursively call jsonToXml
         xml += `<${key}>${jsonToXml(value)}</${key}>`;
       } else {
+        // For regular key-value pairs
         xml += `<${key}>${value}</${key}>`;
       }
     }
   }
-  
+
   return xml;
 };
+
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { slug, type } = req.query;  // Get the 'type' query parameter
@@ -132,7 +140,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         link: boost.userProfileLink || null,
         image: boost.userProfileImage || null,
         description: boost.comment || null,
-        source: boost.appName || null,
+        source: boost.appName ? { name: boost.appName, link: boost.userProfileLink || "" } : null,
         pubDate: formatDate(boost.settled_at ? boost.settled_at * 1000 : Date.now()),
       })),
     };
