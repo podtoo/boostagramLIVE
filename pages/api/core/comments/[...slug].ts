@@ -9,8 +9,30 @@ const formatDate = (timestamp: number): string => {
   return new Date(timestamp * 1000).toUTCString();
 };
 
+// Helper function to convert a JSON object to XML
+const jsonToXml = (obj: any): string => {
+  let xml = "";
+  
+  for (let key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      const value = obj[key];
+      if (Array.isArray(value)) {
+        value.forEach((item: any) => {
+          xml += `<${key}>${jsonToXml(item)}</${key}>`;
+        });
+      } else if (typeof value === "object") {
+        xml += `<${key}>${jsonToXml(value)}</${key}>`;
+      } else {
+        xml += `<${key}>${value}</${key}>`;
+      }
+    }
+  }
+  
+  return xml;
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { slug } = req.query;
+  const { slug, type } = req.query;  // Get the 'type' query parameter
   const db = createDatabase();
 
   try {
@@ -47,24 +69,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         walletname = param;
         continue;
       }
-
-      // If it doesn't match anything, we can either ignore or handle differently
-      // For now, we ignore unknown parameters
     }
 
     let queryConditions: Array<[string, string, any]> = [["status", "==", "settled"]];
 
     // Build query conditions based on what we identified
     if (walletname && podcastGUID && episodeGUID) {
-      // wallet + podcast + episode
       queryConditions.push(["walletName", "==", walletname]);
       queryConditions.push(["episodeGUID", "==", episodeGUID]);
     } else if (walletname && episodeGUID) {
-      // wallet + episode
       queryConditions.push(["walletName", "==", walletname]);
       queryConditions.push(["episodeGUID", "==", episodeGUID]);
     } else if (walletname && podcastGUID) {
-      // wallet + podcast
       const podcastResults = await db.get("podcasts", [["guid", "==", podcastGUID]], []);
       if (podcastResults.length > 0) {
         const podcastId = getId(podcastResults[0]);
@@ -73,17 +89,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         queryConditions.push(["walletName", "==", walletname]);
         queryConditions.push(["episodeGUID", "in", episodeGUIDs]);
       } else {
-        // Just wallet if podcast not found
         queryConditions.push(["walletName", "==", walletname]);
       }
     } else if (podcastGUID && episodeGUID) {
-      // podcast + episode
       queryConditions.push(["episodeGUID", "==", episodeGUID]);
     } else if (episodeGUID) {
-      // only episode
       queryConditions.push(["episodeGUID", "==", episodeGUID]);
     } else if (podcastGUID) {
-      // only podcast
       const podcastResults = await db.get("podcasts", [["guid", "==", podcastGUID]], []);
       if (podcastResults.length > 0) {
         const podcastId = getId(podcastResults[0]);
@@ -92,7 +104,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         queryConditions.push(["episodeGUID", "in", episodeGUIDs]);
       }
     } else if (walletname) {
-      // only wallet
       queryConditions.push(["walletName", "==", walletname]);
     }
 
@@ -103,19 +114,39 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json({ comments: [] });
     }
 
-    // Transform boosts to the desired output format
-    const comments = boosts.map((boost: any) => ({
-      from: boost.username || "Anonymous",
-      uri: boost.userProfileLink || null,
-      avatar: boost.userProfileImage || null,
-      appname: boost.appName || null,
-      appicon: boost.appIcon || null,
-      comment: boost.comment || null,
-      episodeGUID: boost.episodeGUID || null, // Note the corrected spelling here
-      datePosted: boost.settled_at ? formatDate(boost.settled_at) : "",
-    }));
+    // Fetch the podcast and episode details
+    const podcast = await db.get("podcasts", [["guid", "==", podcastGUID]], []);
+    const episode = await db.get("episodes", [["guid", "==", episodeGUID]], []);
 
-    res.status(200).json({ comments });
+    if (!podcast || !episode) {
+      return res.status(404).json({ error: "Podcast or episode not found." });
+    }
+
+    const channel = {
+      title: `${episode[0].title}`,
+      link: episode[0].link,
+      pubDate: formatDate(new Date(episode[0].pubDate).getTime() / 1000),
+      lastBuildDate: formatDate(Date.now() / 1000),
+      items: boosts.map((boost: any) => ({
+        author: boost.username || "Anonymous",
+        link: boost.userProfileLink || null,
+        image: boost.userProfileImage || null,
+        description: boost.comment || null,
+        source: boost.appName || null,
+        pubDate: formatDate(boost.settled_at ? boost.settled_at * 1000 : Date.now()),
+      })),
+    };
+
+    // Check the 'type' query parameter and return the correct response type
+    if (type === "xml") {
+      // Generate and return XML if requested
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<rss><channel>${jsonToXml(channel)}</channel></rss>`;
+      res.setHeader("Content-Type", "application/xml");
+      return res.status(200).send(xml);
+    } else {
+      // Default to JSON
+      return res.status(200).json(channel);
+    }
   } catch (error: any) {
     console.error("Error fetching boosts:", error.message || error);
     res.status(500).json({ error: "Internal server error." });
