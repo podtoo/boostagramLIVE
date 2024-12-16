@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Box, Card, CardContent, Typography, CardMedia, Grid2 as Grid, Button, CardHeader } from "@mui/material";
+import { Box, Card, Chip, CardContent, Typography, CardMedia, Grid2 as Grid, Button, CardHeader, CardActions, CircularProgress } from "@mui/material";
+import { CommentRounded } from '@mui/icons-material';
 
 interface Podcast {
   title: string;
@@ -7,6 +8,53 @@ interface Podcast {
   summary: string;
   guid: string;
 }
+
+
+const CommentChip = ({ title }: { title: string }) => {
+  const [count, setCount] = useState<number | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    fetch(`/api/core/frontend/comments?title=${encodeURIComponent(title)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (isMounted) {
+          setCount(data.count || 0);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setCount(0);
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [title]);
+
+  return loading ? (
+    <Chip
+      icon={<CircularProgress size={16} />}
+      label="Loading..."
+      variant="filled"
+      color="default"
+      sx={{ pl: "0.2em" }}
+    />
+  ) : (
+    <Chip
+      icon={<CommentRounded />}
+      label={count}
+      variant="filled"
+      color="primary"
+      sx={{ pl: "0.2em" }}
+    />
+  );
+};
 
 function MyPodcasts() {
   const [podcasts, setPodcasts] = useState<Podcast[]>([]);
@@ -27,7 +75,7 @@ function MyPodcasts() {
             <Card sx={{ display: "flex", alignItems: "stretch", height: "100%" }}>
               <CardMedia
                 component="img"
-                sx={{ width: 200, height: 200, objectFit: "cover" }}
+                sx={{ width: 250, height: 250, objectFit: "cover" }}
                 image={podcast.image}
                 alt={podcast.title}
               />
@@ -62,6 +110,9 @@ function MyPodcasts() {
                     {podcast.summary}
                   </Typography>
                 </CardContent>
+                <CardActions>
+                <CommentChip title={podcast.title} />
+                </CardActions>
               </Box>
             </Card>
           </Grid>
