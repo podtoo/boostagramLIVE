@@ -130,12 +130,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: "Podcast or episode not found." });
     }
 
+    console.log(JSON.stringify(boosts));
+
     const channel = {
       title: `${episode[0].title}`,
       link: episode[0].link,
       pubDate: formatDate(new Date(episode[0].pubDate).getTime() / 1000),
       lastBuildDate: formatDate(Date.now() / 1000),
-      items: boosts.map((boost: any) => ({
+      item: boosts.map((boost: any) => ({
         author: boost.username || "Anonymous",
         link: boost.userProfileLink || null,
         image: boost.userProfileImage || null,
